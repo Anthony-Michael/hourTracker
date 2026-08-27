@@ -22,8 +22,7 @@ The user records his normal working day with an existing open-source GPX logger,
 separately writes down what actually happened. Neither the app nor the analysis is ours;
 the only thing being tested is whether the resulting trace supports the inference.
 
-**Logger**: GPSLogger (Android) or Open GPX Tracker (iOS). Both free, open source,
-local-only.
+**Logger**: GPSLogger by Mendhak (Android). Free, open source, local-only.
 
 **Required settings** — the one place this test can be silently ruined:
 
@@ -80,10 +79,23 @@ Once traces arrive, the analysis answers:
 The third outcome is a success for this test. Learning it now costs two days of a
 logger app; learning it after building costs the project.
 
-## Open dependency
+## Platform
 
-The target platform (iOS or Android) is not yet decided and materially affects what can
-ship. iOS restricts background location far more tightly than Android and requires a
-paid developer account for distribution to a real device. This test is platform-neutral
-— both loggers produce equivalent GPX — but the answer is needed before implementation
-begins.
+**Android**, confirmed. This resolves what was the largest open risk to the product
+being buildable at all:
+
+- Background location is permissive enough for continuous sampling, given a foreground
+  service and `ACCESS_BACKGROUND_LOCATION`. The equivalent on iOS is far more
+  constrained and might have forced a redesign regardless of what this test finds.
+- Distribution is a sideloaded APK — no store review, no developer account, no annual
+  fee. For a single-user personal tool this is the difference between shipping and not.
+
+Two Android-specific risks move into scope and should be watched during this test, since
+the logger app faces exactly the same constraints the real app will:
+
+- **Battery optimisation.** Aggressive OEM power management (Samsung, Xiaomi and others
+  are notably worse than stock Android) can suspend a background service regardless of
+  permissions. Gaps in the recorded trace are the symptom to look for.
+- **Foreground service notification.** Continuous location requires a persistent
+  notification. It cannot be hidden, so it becomes part of the product's daily presence
+  whether we want it or not.

@@ -238,20 +238,8 @@
     <div class="step">
       <div class="n">1</div>
       <div class="body">
-        <h3>Install a GPS logger</h3>
-        <p class="lead">Both are free and open source. Neither sends anything anywhere — the file stays on your phone until you send it to me.</p>
-        <div class="platforms">
-          <div class="plat">
-            <div class="os">Android</div>
-            <div class="app">GPSLogger</div>
-            <div class="note">by Mendhak. On the Play Store, or F-Droid.</div>
-          </div>
-          <div class="plat">
-            <div class="os">iPhone</div>
-            <div class="app">Open GPX Tracker</div>
-            <div class="note">by merlos. On the App Store.</div>
-          </div>
-        </div>
+        <h3>Install GPSLogger</h3>
+        <p class="lead">By Mendhak, on the Play Store or F-Droid. Free and open source. It sends nothing anywhere — the file sits on your phone until you send it to me.</p>
       </div>
     </div>
 
@@ -263,13 +251,14 @@
         <div class="settings">
           <div class="title">Set these before you start</div>
           <ul>
-            <li>Log every <code>60 seconds</code></li>
-            <li>Distance filter <code>0</code> — log even when stopped</li>
-            <li>Format <code>GPX</code></li>
-            <li>Location permission set to <code>Always</code>, not "while using"</li>
+            <li>Time between fixes <code>60 seconds</code></li>
+            <li>Distance between fixes <code>0</code> — so it logs even when you're standing still</li>
+            <li>Log to <code>GPX</code> turned on</li>
+            <li>Location permission <code>Allow all the time</code></li>
           </ul>
         </div>
-        <p>If it offers a battery-saver or "significant location change" mode, turn it off. We want the honest picture.</p>
+        <p>The first two live under performance or logging settings — I'm going from memory on the exact menu names, so go by what they do rather than what they're called. The distance one is what matters: if it's anything above zero, the app stops recording while you're stood in one place, which is most of your day.</p>
+        <p>Android may also ask to put GPSLogger to sleep to save battery. Tell it not to, or the log will have holes in it.</p>
       </div>
     </div>
   </section>
