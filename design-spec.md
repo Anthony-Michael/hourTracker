@@ -301,11 +301,16 @@ app must never blur them — least of all on the day that ends up being disputed
 
 ## 11. Open questions
 
-- **Geofencing a corridor, not a point.** A flagging site is a stretch of road that
-  shifts a few hundred feet day to day, and the user moves along it. A fixed-radius
-  circle will either miss him or capture the gas station across the road. The intended
-  model is a learned cluster of coordinates rather than a pin, but the tolerance,
-  the re-learning rate, and the behavior on a genuinely new site are unresolved.
+- ~~**Geofencing a corridor, not a point.**~~ **Resolved — the approach changed.**
+  Geofencing was abandoned before implementation. It required knowing where the site
+  is, which is the one thing that cannot be relied on: a flagging site shifts along the
+  road day to day and the parking spot varies. The replacement detects the *transition
+  out of driving* instead, bracketing the day between the morning and evening commutes
+  (`analysis/segment.py`). It needs no learned site, works on day one at a site never
+  visited before, and tolerates the phone riding in the truck or in a pocket. Confirmed
+  with the user: the truck is parked in the morning and does not move until he leaves,
+  and he is on foot at his post all day — so within a work day, driving is never work.
+  Sustained road speed mid-shift would break this, and does not occur for this user.
 - **Battery and sampling rate.** Passive tracking across a 10-hour outdoor day, on a
   phone in a pocket, is the main technical risk to the product being usable at all.
   Not yet investigated.

@@ -47,23 +47,45 @@ Without (1) and (2) the trace is unfalsifiable and the day is wasted.
 days — long days are where precision has monetary consequence and where the inference
 must hold.
 
+## The inference being tested
+
+`../analysis/segment.py`, which brackets the day between commutes rather than fencing
+the site:
+
+```
+1.  speed between consecutive points
+2.  rolling median of 5 samples    -- kills GPS spikes without smearing transitions
+3.  above 8 m/s = driving          -- sits in the gap between walking (1.4) and road speed
+4.  a drive brackets the day only if it lasts >= 3 min AND covers >= 1.5 km
+5.  work day = end of first qualifying drive -> start of last
+```
+
+Step 4 is load-bearing: repositioning a truck a few hundred metres can briefly exceed
+the speed threshold, and without the displacement filter one long day would be split
+into two short ones.
+
+**Confirmed with the user**: the truck is parked on arrival and does not move until he
+leaves, and he is on foot at his post all day. Within a work day, driving is never work.
+Sustained road speed mid-shift — a pilot car, or moving between sites — would break the
+bracket, and does not apply here.
+
+`../analysis/test_segment.py` passes four synthetic days built from stated ground truth
+(short day, overtime day, mid-shift truck move, logger started after arrival). Synthetic
+GPS is far cleaner than real GPS, so that result proves the logic and nothing else. This
+field test is the actual verdict.
+
 ## What gets measured
 
-Once traces arrive, the analysis answers:
-
-- **Departure accuracy.** How close does the last-sample-inside-the-site-cluster come to
-  the reported finish time? Target: within 5 minutes. Past 15 minutes the nightly
-  confirm becomes a nightly correction.
-- **Cluster stability.** Does the day's on-site sample cloud form a coherent, boundable
-  region, and how far does it drift between days as the work zone moves along the road?
-  This determines whether a learned cluster is viable or whether the corridor problem
-  (§11 of the spec) is fatal.
-- **False boundary crossings.** How often does the trace leave and re-enter any plausible
-  site boundary during a confirmed continuous shift? Each one is a potential spurious
-  "you left" event.
-- **Nearby confusables.** What distinguishes the site cluster from adjacent locations a
-  flagger passes through — a gas station, a yard, the road itself, which is *also* the
-  work zone.
+- **Departure accuracy.** How close is the inferred finish to the reported one? Target
+  within 5 minutes. Past 15 the nightly confirm becomes a nightly correction.
+- **Deceleration sharpness.** How cleanly does the morning commute resolve into a stop?
+  This is the entire mechanism — if arrival is smeared across ten minutes of slow
+  traffic near the site, the bracket loosens.
+- **Spurious qualifying drives.** Anything inside the window that clears both the
+  duration and displacement filters. Each one would split a real day in two.
+- **Site spread.** Radius of gyration across the window. Not needed for detection any
+  more, but it tells us whether a site could be *labelled* day to day ("same site as
+  yesterday") and bounds how far the work zone actually creeps.
 - **Signal quality.** Sample gaps, reported accuracy radius, dropouts.
 - **Battery cost.** Percentage drop across a full shift, which decides whether all-day
   passive tracking is viable at all.
