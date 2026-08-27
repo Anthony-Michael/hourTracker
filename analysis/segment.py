@@ -34,21 +34,48 @@ import xml.etree.ElementTree as ET
 from datetime import datetime, timezone
 
 # --- Thresholds -------------------------------------------------------------
-# Chosen for margin, not precision. Anything between roughly 4 and 12 m/s
-# separates walking from driving; 8.0 sits in the middle of that valley.
-DRIVE_SPEED_MS = 8.0
+# The margin that matters is against WALKING, not against highway speed.
+#
+# This started at 8.0 m/s, reasoned from open-road driving, and that was wrong
+# for the commute it has to detect: a 5 minute, 2.2 km drive through town
+# averages 7.3 m/s and never sustains 8, so the day could not be bracketed at
+# all. The detector found zero drives and declined -- correctly, but uselessly.
+#
+#     walking          1.2 - 1.5 m/s
+#     brisk walk       ~2.0 m/s
+#     THRESHOLD        4.5 m/s  (16 km/h)
+#     slow town drive  7 - 11 m/s
+#     open road        15 - 25 m/s
+#
+# 4.5 m/s keeps a threefold margin over walking -- still an enormous gap, since
+# nobody walks to a job site at 16 km/h -- while catching a slow commute that
+# barely gets above town speed. Raising this to "be safe" is what broke it.
+DRIVE_SPEED_MS = 4.5
 
 # A drive only counts as a commute if it is both sustained and goes somewhere.
 # Both conditions are needed: repositioning a truck 200 m along the work zone
 # can exceed the speed threshold briefly, and would otherwise split the day in
 # two. Requiring real displacement rejects it.
-MIN_DRIVE_SECONDS = 180
-MIN_DRIVE_DISPLACEMENT_M = 1500
+#
+# These are sized for a SHORT commute. The real one being tested is 5-10
+# minutes door to door, so a threshold tuned to a half-hour drive would reject
+# the very trip the whole method depends on. Speed does the discriminating
+# here, not distance -- walking never approaches 8 m/s no matter how far it
+# goes -- so both bounds can sit low without letting a walk through.
+MIN_DRIVE_SECONDS = 90
+MIN_DRIVE_DISPLACEMENT_M = 1000
 
 # Odd samples spike to absurd speeds when a fix is poor. A rolling median over
 # an odd-sized window removes them without smearing genuine transitions the way
 # a mean would.
-SMOOTHING_WINDOW = 5
+#
+# The window must be chosen in SECONDS, not samples. A fixed 5-sample window is
+# 50 s of smoothing at a 10 s logging interval and a full 5 minutes at 60 s --
+# and 5 minutes of smoothing applied to a 6 minute commute erases the commute.
+# That failure is silent: the trace looks fine, the drive simply vanishes.
+SMOOTHING_SECONDS = 90
+MIN_SMOOTHING_WINDOW = 3
+MAX_SMOOTHING_WINDOW = 9
 
 # Sanity checks on the recovered window.
 MIN_WORKDAY_SECONDS = 3 * 3600
@@ -119,6 +146,21 @@ def point_speeds(points):
     return speeds
 
 
+def sample_interval(points):
+    """Median seconds between samples. Loggers drift, so take the median."""
+    gaps = [(points[i][0] - points[i - 1][0]).total_seconds()
+            for i in range(1, len(points))]
+    gaps = [g for g in gaps if g > 0]
+    return statistics.median(gaps) if gaps else 1.0
+
+
+def smoothing_window(points):
+    """An odd sample count covering roughly SMOOTHING_SECONDS of real time."""
+    n = int(round(SMOOTHING_SECONDS / sample_interval(points)))
+    n = max(MIN_SMOOTHING_WINDOW, min(MAX_SMOOTHING_WINDOW, n))
+    return n if n % 2 else n + 1
+
+
 def rolling_median(values, window):
     half = window // 2
     return [
@@ -164,21 +206,28 @@ def spread(points, lo, hi):
 
 def infer_workday(points):
     """Infer the work window. Returns a result dict; 'ok' says whether to trust it."""
-    if len(points) < SMOOTHING_WINDOW:
+    if len(points) < MIN_SMOOTHING_WINDOW:
         return {"ok": False, "reason": "trace too short to segment"}
 
-    speeds = rolling_median(point_speeds(points), SMOOTHING_WINDOW)
+    interval = sample_interval(points)
+    window = smoothing_window(points)
+    speeds = rolling_median(point_speeds(points), window)
     drives = find_drives(points, speeds)
 
     if len(drives) < 2:
-        return {
-            "ok": False,
-            "reason": (
-                f"found {len(drives)} qualifying drive(s), need 2 to bracket a day. "
-                "Recording likely started after arriving or stopped before leaving."
-            ),
-            "drives": drives,
-        }
+        reason = (
+            f"found {len(drives)} qualifying drive(s), need 2 to bracket a day. "
+            "Recording likely started after arriving or stopped before leaving."
+        )
+        # A short commute logged coarsely is the other way this fails, and it
+        # looks identical from the outside. Say so rather than let it be
+        # misdiagnosed as a forgotten logger.
+        if interval > 20:
+            reason += (
+                f" Sampling every {interval:.0f}s may also be too coarse to catch a "
+                "commute of only a few minutes -- try a 10s interval."
+            )
+        return {"ok": False, "reason": reason, "drives": drives}
 
     # First drive of the day ends at the parking event; last drive begins at departure.
     arrive_i = drives[0][1]
@@ -205,8 +254,19 @@ def infer_workday(points):
             "moved between locations mid-shift?"
         )
 
+    # The bracketing drives are the whole mechanism. If either is carried by only
+    # a handful of samples, the inferred times are resting on very little.
+    thin = min(drives[0][1] - drives[0][0] + 1, drives[-1][1] - drives[-1][0] + 1)
+    if thin < 8:
+        warnings.append(
+            f"shortest bracketing drive has only {thin} samples -- "
+            "log more often for a commute this short"
+        )
+
     return {
         "ok": True,
+        "sample_interval_s": interval,
+        "smoothing_window": window,
         "arrived": points[arrive_i][0],
         "departed": points[depart_i][0],
         "duration_h": duration / 3600,

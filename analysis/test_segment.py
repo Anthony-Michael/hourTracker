@@ -38,10 +38,11 @@ def at(hhmm, second=0):
     return DAY.replace(hour=int(hhmm[:2]), minute=int(hhmm[2:]), second=second)
 
 
-def drive(points, start, end, from_pt, to_pt):
-    """Straight-line travel, sampled every minute, with mild speed variation."""
+def drive(points, start, end, from_pt, to_pt, step=None):
+    """Straight-line travel, sampled at `step` seconds, with mild speed variation."""
+    step = step or SAMPLE_SECONDS
     total = (end - start).total_seconds()
-    steps = max(1, int(total // SAMPLE_SECONDS))
+    steps = max(1, int(total // step))
     for i in range(steps + 1):
         f = i / steps
         lat = from_pt[0] + (to_pt[0] - from_pt[0]) * f
@@ -49,18 +50,19 @@ def drive(points, start, end, from_pt, to_pt):
         jitter_n = random.gauss(0, 4)
         jitter_e = random.gauss(0, 4)
         lat, lon = offset(lat, lon, jitter_n, jitter_e)
-        points.append((start + timedelta(seconds=i * SAMPLE_SECONDS), lat, lon))
+        points.append((start + timedelta(seconds=i * step), lat, lon))
 
 
-def stand(points, start, end, centre, drift_m=200.0, jitter_m=25.0):
+def stand(points, start, end, centre, drift_m=200.0, jitter_m=25.0, step=None):
     """A flagger's day: near-stationary, but the work zone creeps along the road."""
+    step = step or SAMPLE_SECONDS
     total = (end - start).total_seconds()
-    steps = max(1, int(total // SAMPLE_SECONDS))
+    steps = max(1, int(total // step))
     for i in range(steps + 1):
         f = i / steps
         lat, lon = offset(centre[0], centre[1], 0, drift_m * f)
         lat, lon = offset(lat, lon, random.gauss(0, jitter_m), random.gauss(0, jitter_m))
-        points.append((start + timedelta(seconds=i * SAMPLE_SECONDS), lat, lon))
+        points.append((start + timedelta(seconds=i * step), lat, lon))
 
 
 def write_gpx(points, path):
@@ -155,7 +157,48 @@ def walks_off_site():
     return pts, "0649", "1707"
 
 
+def short_commute(step):
+    """The real case: a 5 km commute of about eight minutes, then a short walk in.
+
+    Everything else here was built against a half-hour drive, which is a far
+    easier signal than the one that actually has to be detected. At a 60 s
+    logging interval this entire commute is roughly eight samples, and the
+    smoothing that protects against GPS spikes can erase it outright."""
+    home = offset(SITE_LAT, SITE_LON, 3600, 3400)
+    lot = offset(SITE_LAT, SITE_LON, 20, -260)
+    pts = []
+    drive(pts, at("0638"), at("0646"), home, lot, step=step)
+    drive(pts, at("0646"), at("0652"), lot, (SITE_LAT, SITE_LON), step=step)  # walk in
+    stand(pts, at("0652"), at("1705"), (SITE_LAT, SITE_LON), drift_m=180, step=step)
+    drive(pts, at("1705"), at("1710"), (SITE_LAT, SITE_LON), lot, step=step)  # walk out
+    drive(pts, at("1710"), at("1718"), lot, home, step=step)
+    return pts, "0646", "1710"
+
+
+def slow_short_commute(step):
+    """The hardest real case, and the one that exposed a genuine bug.
+
+    Five minutes, 2.2 km, averaging 7.3 m/s -- town driving that never reaches
+    open-road speed. At the original 8 m/s threshold this produced ZERO
+    qualifying drives and the day could not be bracketed at all. The threshold
+    had been reasoned from highway speeds when the margin that actually matters
+    is against walking."""
+    home = offset(SITE_LAT, SITE_LON, 1600, 1500)
+    lot = offset(SITE_LAT, SITE_LON, 20, -260)
+    pts = []
+    drive(pts, at("0641"), at("0646"), home, lot, step=step)
+    drive(pts, at("0646"), at("0651"), lot, (SITE_LAT, SITE_LON), step=step)
+    stand(pts, at("0651"), at("1706"), (SITE_LAT, SITE_LON), drift_m=180, step=step)
+    drive(pts, at("1706"), at("1710"), (SITE_LAT, SITE_LON), lot, step=step)
+    drive(pts, at("1710"), at("1715"), lot, home, step=step)
+    return pts, "0646", "1710"
+
+
 SCENARIOS = [
+    ("short commute, logged every 10s", lambda: short_commute(10), True),
+    ("short commute, logged every 60s", lambda: short_commute(60), True),
+    ("slow 5-min commute, logged every 10s", lambda: slow_short_commute(10), True),
+    ("slow 5-min commute, logged every 60s", lambda: slow_short_commute(60), True),
     ("normal short day", normal_day, True),
     ("overtime day", overtime_day, True),
     ("truck repositioned mid-shift", truck_repositioned, True),

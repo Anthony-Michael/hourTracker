@@ -28,7 +28,7 @@ the only thing being tested is whether the resulting trace supports the inferenc
 
 | Setting | Value | Why |
 |---|---|---|
-| Interval | 60 s | Enough resolution to place a departure within a minute or two |
+| Interval | 10 s | The commute is only 5-10 minutes. At 60 s that is roughly five samples for the entire trip, and the trip is what the whole method depends on |
 | Distance filter | 0 | **Critical.** Movement-triggered logging discards stationary samples, and standing still on site is the signal we most need |
 | Format | GPX | Standard, parseable |
 | Permission | Always | "While using" stops sampling on lock, which is the normal state of a phone in a pocket |
@@ -54,9 +54,9 @@ the site:
 
 ```
 1.  speed between consecutive points
-2.  rolling median of 5 samples    -- kills GPS spikes without smearing transitions
-3.  above 8 m/s = driving          -- sits in the gap between walking (1.4) and road speed
-4.  a drive brackets the day only if it lasts >= 3 min AND covers >= 1.5 km
+2.  rolling median over ~90s       -- window sized in SECONDS, not samples
+3.  above 4.5 m/s = driving        -- threefold margin over walking (1.4 m/s)
+4.  a drive brackets the day only if it lasts >= 90 s AND covers >= 1 km
 5.  work day = end of first qualifying drive -> start of last
 ```
 
@@ -64,15 +64,27 @@ Step 4 is load-bearing: repositioning a truck a few hundred metres can briefly e
 the speed threshold, and without the displacement filter one long day would be split
 into two short ones.
 
+Step 3's threshold started at 8 m/s, reasoned from open-road driving, and that was a
+real bug. The commute being tested is 5-10 minutes through town; a 2.2 km version of it
+averages 7.3 m/s and never sustains 8, so the segmenter found zero qualifying drives and
+could not bracket the day at all. The margin that matters is against walking, not
+against highway speed, so 4.5 m/s keeps a threefold gap over a walking pace while still
+catching a slow commute.
+
 **Confirmed with the user**: the truck is parked on arrival and does not move until he
 leaves, and he is on foot at his post all day. Within a work day, driving is never work.
 Sustained road speed mid-shift — a pilot car, or moving between sites — would break the
 bracket, and does not apply here.
 
-`../analysis/test_segment.py` passes four synthetic days built from stated ground truth
-(short day, overtime day, mid-shift truck move, logger started after arrival). Synthetic
-GPS is far cleaner than real GPS, so that result proves the logic and nothing else. This
-field test is the actual verdict.
+Step 2's window is sized in seconds rather than samples for the same reason: a fixed
+5-sample window is 50 s of smoothing at a 10 s interval but a full 5 minutes at 60 s, and
+five minutes of smoothing applied to a six-minute commute would erase it silently.
+
+`../analysis/test_segment.py` passes nine synthetic days built from stated ground truth,
+including both a fast and a slow short commute at two logging intervals, an overtime day,
+a mid-shift truck move, walking off site to a porta potty, and a trace whose logger was
+started after arrival. Synthetic GPS is far cleaner than real GPS, so that result proves
+the logic and nothing else. This field test is the actual verdict.
 
 ## What gets measured
 
