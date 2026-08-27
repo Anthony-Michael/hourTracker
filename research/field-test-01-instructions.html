@@ -1,0 +1,349 @@
+<title>Field Test One</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --bg: #FCFCFA;
+    --surface: #FFFFFF;
+    --ink: #1A1815;
+    --muted: #746B5E;
+    --rule: #DDD8D0;
+    --rule-strong: #C7C0B5;
+    --accent: #F25C05;
+    --accent-ink: #9E3B00;
+    --accent-wash: #FDEEE3;
+    --on-accent: #1A1815;
+
+    --font-ui: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-rec: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --r-sm: 4px;
+    --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+    --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #171512;
+      --surface: #1E1B18;
+      --ink: #F2EFE9;
+      --muted: #948C80;
+      --rule: #2E2A26;
+      --rule-strong: #423C35;
+      --accent: #FF7A22;
+      --accent-ink: #FF9A52;
+      --accent-wash: #2E1D10;
+      --on-accent: #1A1815;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --bg: #171512;
+    --surface: #1E1B18;
+    --ink: #F2EFE9;
+    --muted: #948C80;
+    --rule: #2E2A26;
+    --rule-strong: #423C35;
+    --accent: #FF7A22;
+    --accent-ink: #FF9A52;
+    --accent-wash: #2E1D10;
+    --on-accent: #1A1815;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 17px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: var(--s6) var(--s5) var(--s8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s7);
+  }
+
+  .eyebrow {
+    font-family: var(--font-rec);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+  }
+
+  header { display: flex; flex-direction: column; gap: var(--s3); }
+  header h1 {
+    margin: 0;
+    font-size: clamp(28px, 7vw, 38px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+  header p { margin: 0; color: var(--muted); font-size: 17px; }
+
+  section { display: flex; flex-direction: column; gap: var(--s4); }
+
+  h2 {
+    margin: 0;
+    font-size: 13px;
+    font-family: var(--font-rec);
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: var(--s3);
+  }
+
+  h3 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+
+  p { margin: 0; }
+
+  .step {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: var(--s4);
+    padding-bottom: var(--s5);
+    border-bottom: 1px solid var(--rule);
+  }
+  .step:last-child { border-bottom: none; padding-bottom: 0; }
+  .step .n {
+    font-family: var(--font-rec);
+    font-size: 21px;
+    font-weight: 500;
+    color: var(--accent-ink);
+    line-height: 1.25;
+    font-variant-numeric: tabular-nums;
+  }
+  .step .body { display: flex; flex-direction: column; gap: var(--s3); }
+  .step .body p { color: var(--muted); font-size: 16px; }
+  .step .body p.lead { color: var(--ink); }
+
+  .platforms { display: flex; flex-direction: column; gap: var(--s4); }
+  .plat {
+    border-left: 3px solid var(--rule-strong);
+    padding-left: var(--s4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s1);
+  }
+  .plat .os {
+    font-family: var(--font-rec);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .plat .app { font-size: 17px; font-weight: 600; }
+  .plat .note { font-size: 15px; color: var(--muted); }
+
+  .settings {
+    background: var(--accent-wash);
+    border-left: 3px solid var(--accent);
+    padding: var(--s4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+  }
+  .settings .title { font-size: 15px; font-weight: 600; }
+  .settings ul { margin: 0; padding-left: var(--s5); display: flex; flex-direction: column; gap: var(--s2); }
+  .settings li { font-size: 16px; }
+  .settings code {
+    font-family: var(--font-rec);
+    font-size: 15px;
+    font-weight: 500;
+  }
+
+  .record { display: flex; flex-direction: column; }
+  .rec-row {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--s4);
+    align-items: baseline;
+    padding: var(--s4) 0;
+    border-bottom: 1px solid var(--rule);
+  }
+  .rec-row:first-child { border-top: 1px solid var(--rule); }
+  .rec-row .what { display: flex; flex-direction: column; gap: var(--s1); }
+  .rec-row .what strong { font-weight: 600; font-size: 17px; }
+  .rec-row .what span { font-size: 15px; color: var(--muted); }
+  .rec-row .blank {
+    font-family: var(--font-rec);
+    font-size: 15px;
+    color: var(--muted);
+    border-bottom: 1px solid var(--rule-strong);
+    min-width: 92px;
+    text-align: center;
+    padding-bottom: 2px;
+  }
+
+  .callout {
+    border-top: 2px solid var(--accent);
+    padding-top: var(--s4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s3);
+  }
+  .callout h3 { color: var(--accent-ink); }
+  .callout p { font-size: 16px; }
+
+  ul.plain { margin: 0; padding-left: var(--s5); display: flex; flex-direction: column; gap: var(--s2); }
+  ul.plain li { font-size: 16px; color: var(--muted); }
+  ul.plain li strong { color: var(--ink); font-weight: 600; }
+
+  footer {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--s4);
+    font-size: 15px;
+    color: var(--muted);
+  }
+
+  @media (max-width: 520px) {
+    .wrap { padding: var(--s5) var(--s4) var(--s7); gap: var(--s6); }
+    .rec-row { grid-template-columns: 1fr; gap: var(--s2); }
+    .rec-row .blank { min-width: 0; width: 120px; text-align: left; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">Field test 01</div>
+    <h1>Two days of GPS, and what you actually worked</h1>
+    <p>Before anything gets built, we need to know whether a phone can figure out your day on its own. You can answer that this week with an app that already exists.</p>
+  </header>
+
+  <section>
+    <h2>What we're finding out</h2>
+    <p>Whether your phone's location trace is good enough to recover your start and finish times without you doing anything. If it is, the app is worth building. If it isn't, we'd rather know now than after building it.</p>
+    <p style="color: var(--muted); font-size: 16px;">It answers the battery question at the same time — a full day of tracking tells us what this actually costs.</p>
+  </section>
+
+  <section>
+    <h2>Once, before your first day</h2>
+
+    <div class="step">
+      <div class="n">1</div>
+      <div class="body">
+        <h3>Install a GPS logger</h3>
+        <p class="lead">Both are free and open source. Neither sends anything anywhere — the file stays on your phone until you send it to me.</p>
+        <div class="platforms">
+          <div class="plat">
+            <div class="os">Android</div>
+            <div class="app">GPSLogger</div>
+            <div class="note">by Mendhak. On the Play Store, or F-Droid.</div>
+          </div>
+          <div class="plat">
+            <div class="os">iPhone</div>
+            <div class="app">Open GPX Tracker</div>
+            <div class="note">by merlos. On the App Store.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">2</div>
+      <div class="body">
+        <h3>Set it to log on time, not on movement</h3>
+        <p class="lead">This is the one setting that matters. Most loggers default to recording only when you move a certain distance — which would throw away exactly what we need, because standing still on site <em>is</em> the signal.</p>
+        <div class="settings">
+          <div class="title">Set these before you start</div>
+          <ul>
+            <li>Log every <code>60 seconds</code></li>
+            <li>Distance filter <code>0</code> — log even when stopped</li>
+            <li>Format <code>GPX</code></li>
+            <li>Location permission set to <code>Always</code>, not "while using"</li>
+          </ul>
+        </div>
+        <p>If it offers a battery-saver or "significant location change" mode, turn it off. We want the honest picture.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Each work day</h2>
+
+    <div class="step">
+      <div class="n">3</div>
+      <div class="body">
+        <h3>Start it in the truck, stop it when you're home</h3>
+        <p class="lead">Start recording before you leave for site, stop after you're back. Then put your phone wherever it normally lives — pocket, truck, wherever. Don't do anything special with it. If you baby it, we learn nothing.</p>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="n">4</div>
+      <div class="body">
+        <h3>Write down what actually happened</h3>
+        <p class="lead">The most important part, and the easiest to forget. Without the real times, the GPS trace can't be checked against anything and the whole day is wasted.</p>
+        <p>Note it the moment it happens, not from memory at the end of the week. A text to yourself works fine.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The four things to record</h2>
+    <div class="record">
+      <div class="rec-row">
+        <div class="what"><strong>Time you actually started</strong><span>Your real start, not when you arrived</span></div>
+        <div class="blank">: a m</div>
+      </div>
+      <div class="rec-row">
+        <div class="what"><strong>Time you actually finished</strong><span>When you were done, not when you got home</span></div>
+        <div class="blank">: p m</div>
+      </div>
+      <div class="rec-row">
+        <div class="what"><strong>Battery at start / at end</strong><span>Just the percentages</span></div>
+        <div class="blank">% &nbsp;/&nbsp; %</div>
+      </div>
+      <div class="rec-row">
+        <div class="what"><strong>Anything unusual</strong><span>Moved down the road, left and came back, phone died, different site</span></div>
+        <div class="blank">note</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="callout">
+    <h3>Try to catch one long day</h3>
+    <p>A short day and a day past nine hours are worth far more than two ordinary days. The long ones are where the money is and where the app has to be right, so if you know a big day is coming, that's the one to record.</p>
+    <p style="color: var(--muted);">Two or three days is plenty. Don't let this become a chore.</p>
+  </section>
+
+  <section>
+    <h2>Then send me</h2>
+    <ul class="plain">
+      <li><strong>The GPX files</strong> — one per day, straight out of the app</li>
+      <li><strong>Your four notes</strong> for each day</li>
+      <li><strong>Anything that annoyed you</strong> about doing this, which is its own useful finding</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>What happens next</h2>
+    <p>I'll write the inference against your real trace and check what it produces against what you wrote down. Three possible outcomes, and all of them are useful:</p>
+    <ul class="plain">
+      <li><strong>Within a few minutes</strong> — the idea works, and we start building for real.</li>
+      <li><strong>Close but messy</strong> — the trace needs smoothing, or the site boundary needs to be shaped differently. Fixable, and now we know how.</li>
+      <li><strong>Nowhere near</strong> — passive tracking can't carry this, and we redesign around a much lighter touch instead of building something that nags you nightly.</li>
+    </ul>
+  </section>
+
+  <footer>
+    Nothing here leaves your phone until you send it. The logger is local-only, and the trace is just a list of coordinates and times — no account, no server, nobody's cloud.
+  </footer>
+
+</div>
