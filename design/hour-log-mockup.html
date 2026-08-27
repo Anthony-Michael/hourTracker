@@ -1,0 +1,675 @@
+<title>Flagger Hour Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap">
+
+<style>
+  :root {
+    --ground: #FCFCFA;
+    --page: #F4F2ED;
+    --ink: #1A1815;
+    --muted: #746B5E;
+    --faint: #746B5E;
+    --rule: #DDD8D0;
+    --rule-strong: #C7C0B5;
+    --surface: #FFFFFF;
+    --accent: #F25C05;
+    --accent-ink: #9E3B00;
+    --accent-wash: #FDEEE3;
+    --on-accent: #1A1815;
+
+    --font-ui: "IBM Plex Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    --font-rec: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+    --r-sm: 4px;
+    --r-md: 8px;
+    --r-pill: 999px;
+
+    --s1: 4px;  --s2: 8px;  --s3: 12px; --s4: 16px;
+    --s5: 24px; --s6: 32px; --s7: 48px; --s8: 64px;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --ground: #171512;
+      --page: #100E0C;
+      --ink: #F2EFE9;
+      --muted: #948C80;
+      --faint: #948C80;
+      --rule: #2E2A26;
+      --rule-strong: #423C35;
+      --surface: #1E1B18;
+      --accent: #FF7A22;
+      --accent-ink: #FF9A52;
+      --accent-wash: #2E1D10;
+      --on-accent: #1A1815;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    --ground: #171512;
+    --page: #100E0C;
+    --ink: #F2EFE9;
+    --muted: #948C80;
+    --faint: #948C80;
+    --rule: #2E2A26;
+    --rule-strong: #423C35;
+    --surface: #1E1B18;
+    --accent: #FF7A22;
+    --accent-ink: #FF9A52;
+    --accent-wash: #2E1D10;
+    --on-accent: #1A1815;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--page);
+    color: var(--ink);
+    font-family: var(--font-ui);
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: var(--s7) var(--s5) var(--s8);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s7);
+  }
+
+  /* ---------- page header ---------- */
+
+  .masthead { display: flex; flex-direction: column; gap: var(--s3); max-width: 60ch; }
+
+  .eyebrow {
+    font-family: var(--font-rec);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  .masthead h1 {
+    margin: 0;
+    font-size: clamp(30px, 4vw, 42px);
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+    text-wrap: balance;
+  }
+
+  .masthead p { margin: 0; color: var(--muted); font-size: 16px; }
+
+  .tokenline {
+    font-family: var(--font-rec);
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.02em;
+    border-top: 1px solid var(--rule);
+    padding-top: var(--s3);
+  }
+
+  /* ---------- phone grid ---------- */
+
+  .screens {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s7) var(--s6);
+    align-items: flex-start;
+  }
+
+  .screen { display: flex; flex-direction: column; gap: var(--s4); width: 340px; flex: 0 0 auto; }
+
+  .caption { display: flex; flex-direction: column; gap: var(--s2); }
+  .caption .num {
+    font-family: var(--font-rec);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.09em;
+    color: var(--accent-ink);
+    text-transform: uppercase;
+  }
+  .caption h2 { margin: 0; font-size: 19px; font-weight: 600; letter-spacing: -0.01em; }
+  .caption p { margin: 0; font-size: 14px; line-height: 1.55; color: var(--muted); }
+
+  .phone {
+    width: 340px;
+    height: 700px;
+    background: var(--ground);
+    border: 1px solid var(--rule-strong);
+    border-radius: 22px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+  }
+
+  .statusbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--s3) var(--s5) var(--s2);
+    font-family: var(--font-rec);
+    font-size: 11px;
+    color: var(--faint);
+    letter-spacing: 0.02em;
+    flex: 0 0 auto;
+  }
+
+  .app { flex: 1 1 auto; display: flex; flex-direction: column; overflow: hidden; }
+
+  /* ---------- screen 1: period ---------- */
+
+  .apphead {
+    padding: var(--s2) var(--s5) var(--s4);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s4);
+    border-bottom: 1px solid var(--rule);
+    flex: 0 0 auto;
+  }
+
+  .periodnav { display: flex; align-items: center; justify-content: space-between; gap: var(--s3); }
+  .periodnav .label { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+  .navbtn {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 32px; height: 32px;
+    border: 1px solid var(--rule);
+    border-radius: var(--r-sm);
+    background: transparent;
+    color: var(--muted);
+  }
+  .navbtn svg { width: 15px; height: 15px; }
+
+  .total { display: flex; flex-direction: column; gap: var(--s1); }
+  .total .big {
+    font-family: var(--font-rec);
+    font-size: 56px;
+    font-weight: 500;
+    letter-spacing: -0.03em;
+    line-height: 1;
+    font-variant-numeric: tabular-nums;
+  }
+  .total .big .unit { font-size: 20px; font-weight: 400; color: var(--muted); letter-spacing: 0; margin-left: 6px; }
+  .total .meta { font-size: 13px; color: var(--muted); display: flex; gap: var(--s2); align-items: center; }
+  .total .meta .flagged { color: var(--accent-ink); font-weight: 500; }
+
+  .daylist { flex: 1 1 auto; overflow: hidden; display: flex; flex-direction: column; }
+
+  .day {
+    display: grid;
+    grid-template-columns: 62px 1fr auto;
+    align-items: baseline;
+    gap: var(--s3);
+    padding: var(--s3) var(--s5);
+    border-bottom: 1px solid var(--rule);
+    position: relative;
+  }
+  .day .date { font-size: 13px; font-weight: 500; color: var(--ink); }
+  .day .date .dow { color: var(--muted); font-weight: 400; }
+  .day .span {
+    font-family: var(--font-rec);
+    font-size: 12px;
+    color: var(--muted);
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+  .day .hrs {
+    font-family: var(--font-rec);
+    font-size: 16px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.01em;
+  }
+
+  .day.long { background: var(--accent-wash); }
+  .day.long::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 3px;
+    background: var(--accent);
+  }
+  .day.long .hrs { color: var(--accent-ink); font-weight: 600; }
+
+  .day.off .span { color: var(--faint); font-style: normal; }
+  .day.off .hrs { color: var(--faint); font-weight: 400; }
+
+  .day.pending .hrs { color: var(--accent-ink); }
+  .pendpill {
+    display: inline-block;
+    font-family: var(--font-rec);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--on-accent);
+    background: var(--accent);
+    border-radius: var(--r-pill);
+    padding: 2px 7px;
+    margin-left: var(--s2);
+    vertical-align: 1px;
+  }
+
+  /* ---------- screen 2: confirm ---------- */
+
+  .confirm {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    padding: var(--s5);
+    gap: var(--s5);
+  }
+
+  .confirm .askwhy {
+    font-family: var(--font-rec);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent-ink);
+    display: flex;
+    align-items: center;
+    gap: var(--s2);
+  }
+  .confirm .askwhy svg { width: 13px; height: 13px; flex: 0 0 auto; }
+
+  .confirm .dateline { font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
+
+  .hero { display: flex; flex-direction: column; gap: var(--s2); margin-top: auto; }
+  .hero .figure {
+    font-family: var(--font-rec);
+    font-size: 108px;
+    font-weight: 500;
+    line-height: 0.9;
+    letter-spacing: -0.05em;
+    font-variant-numeric: tabular-nums;
+    color: var(--accent-ink);
+  }
+  .hero .figlabel { font-size: 15px; color: var(--muted); }
+
+  .rangebox {
+    border-top: 1px solid var(--rule);
+    border-bottom: 1px solid var(--rule);
+    padding: var(--s4) 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+  .rangerow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--s3); }
+  .rangerow .k { font-size: 13px; color: var(--muted); }
+  .rangerow .v {
+    font-family: var(--font-rec);
+    font-size: 15px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+  }
+  .rangerow .v .src { font-size: 11px; color: var(--faint); font-weight: 400; margin-left: var(--s2); }
+
+  .actions { display: flex; flex-direction: column; gap: var(--s3); margin-top: auto; }
+
+  .btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--s2);
+    height: 56px;
+    border-radius: var(--r-sm);
+    font-family: var(--font-ui);
+    font-size: 17px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    border: 1px solid transparent;
+  }
+  .btn svg { width: 19px; height: 19px; }
+  .btn-primary { background: var(--accent); color: var(--on-accent); }
+  .btn-quiet { background: transparent; color: var(--ink); border-color: var(--rule-strong); }
+
+  /* ---------- screen 3: adjust ---------- */
+
+  .adjust { flex: 1 1 auto; display: flex; flex-direction: column; }
+
+  .adjusthead {
+    padding: var(--s4) var(--s5) var(--s4);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-direction: column;
+    gap: var(--s2);
+  }
+  .adjusthead h3 { margin: 0; font-size: 22px; font-weight: 600; letter-spacing: -0.02em; }
+  .adjusthead p { margin: 0; font-size: 13px; color: var(--muted); line-height: 1.5; }
+
+  .choice {
+    display: flex;
+    align-items: center;
+    gap: var(--s4);
+    padding: var(--s4) var(--s5);
+    border-bottom: 1px solid var(--rule);
+    text-align: left;
+  }
+  .choice .time {
+    font-family: var(--font-rec);
+    font-size: 21px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    width: 96px;
+    flex: 0 0 auto;
+  }
+  .choice .why { font-size: 13px; color: var(--muted); line-height: 1.45; }
+  .choice .why strong { color: var(--ink); font-weight: 500; display: block; }
+  .choice.sel { background: var(--accent-wash); }
+  .choice.sel .time { color: var(--accent-ink); }
+  .choice .mark { margin-left: auto; color: var(--accent); display: flex; }
+  .choice .mark svg { width: 20px; height: 20px; }
+
+  .startnote {
+    padding: var(--s4) var(--s5);
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--s3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .startnote .k { font-size: 13px; color: var(--muted); }
+  .startnote .v { font-family: var(--font-rec); font-size: 15px; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .startnote .v .src { font-size: 11px; color: var(--faint); font-weight: 400; margin-left: var(--s2); }
+
+  .adjustfoot { margin-top: auto; padding: var(--s5); display: flex; flex-direction: column; gap: var(--s3); }
+  .recalc {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    padding-bottom: var(--s3);
+    border-bottom: 1px solid var(--rule);
+  }
+  .recalc .k { font-size: 13px; color: var(--muted); }
+  .recalc .v {
+    font-family: var(--font-rec);
+    font-size: 26px;
+    font-weight: 500;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    color: var(--accent-ink);
+  }
+
+  /* ---------- notes ---------- */
+
+  .notes {
+    border-top: 1px solid var(--rule);
+    padding-top: var(--s5);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--s5) var(--s6);
+  }
+  .note { display: flex; flex-direction: column; gap: var(--s2); }
+  .note h4 {
+    margin: 0;
+    font-family: var(--font-rec);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+  .note p { margin: 0; font-size: 14px; line-height: 1.6; max-width: 46ch; }
+
+  @media (max-width: 760px) {
+    .wrap { padding: var(--s5) var(--s4) var(--s7); gap: var(--s6); }
+    .screens { gap: var(--s6) var(--s5); }
+    .screen, .phone { width: 100%; max-width: 340px; }
+  }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <div class="eyebrow">Business mockup · iteration 2</div>
+    <h1>An hour log that fills itself in</h1>
+    <p>A private, second record of your days on site — so when a paycheque looks light, you have something to check it against. It writes the day down; you decide what it means.</p>
+    <div class="tokenline">modern-minimal (field register) · divider · phosphor bold · en-CA · IBM Plex Sans / Mono</div>
+  </header>
+
+  <div class="screens">
+
+    <!-- ============ SCREEN 1 ============ -->
+    <section class="screen">
+      <div class="caption">
+        <span class="num">Screen 01</span>
+        <h2>The pay period</h2>
+        <p>What you open when the stub looks off. Every day in the period, start to finish, with the days that ran past nine hours marked — those are the only ones where a missing half hour costs you real money.</p>
+      </div>
+
+      <div class="phone">
+        <div class="statusbar"><span>9:41</span><span>Hour Log</span></div>
+        <div class="app">
+
+          <div class="apphead">
+            <div class="periodnav">
+              <button class="navbtn" aria-label="Previous period">
+                <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M163.31 208.69a8 8 0 0 1-11.32 11.32l-88-88a8 8 0 0 1 0-11.32l88-88a8 8 0 0 1 11.32 11.32L81 126.34Z"/></svg>
+              </button>
+              <span class="label">Aug 13 &ndash; Aug 26</span>
+              <button class="navbtn" aria-label="Next period">
+                <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M92.69 216.69a8 8 0 0 1 0-11.32L175 126.34 92.69 44a8 8 0 0 1 11.32-11.31l88 88a8 8 0 0 1 0 11.32l-88 88a8 8 0 0 1-11.32 0Z"/></svg>
+              </button>
+            </div>
+
+            <div class="total">
+              <div class="big">84.9<span class="unit">hrs on site</span></div>
+              <div class="meta">
+                <span>11 days worked</span>
+                <span aria-hidden="true">·</span>
+                <span class="flagged">3 past 9 hrs</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="daylist">
+            <div class="day long pending">
+              <span class="date"><span class="dow">Wed</span> 26</span>
+              <span class="span">7:00a &ndash; 5:12p</span>
+              <span class="hrs">10.2<span class="pendpill">Confirm</span></span>
+            </div>
+            <div class="day">
+              <span class="date"><span class="dow">Tue</span> 25</span>
+              <span class="span">7:00a &ndash; 1:05p</span>
+              <span class="hrs">6.1</span>
+            </div>
+            <div class="day">
+              <span class="date"><span class="dow">Mon</span> 24</span>
+              <span class="span">7:00a &ndash; 2:12p</span>
+              <span class="hrs">7.2</span>
+            </div>
+            <div class="day off">
+              <span class="date"><span class="dow">Sun</span> 23</span>
+              <span class="span">No site time</span>
+              <span class="hrs">&mdash;</span>
+            </div>
+            <div class="day">
+              <span class="date"><span class="dow">Sat</span> 22</span>
+              <span class="span">7:00a &ndash; 11:30a</span>
+              <span class="hrs">4.5</span>
+            </div>
+            <div class="day long">
+              <span class="date"><span class="dow">Fri</span> 21</span>
+              <span class="span">7:00a &ndash; 6:40p</span>
+              <span class="hrs">11.7</span>
+            </div>
+            <div class="day">
+              <span class="date"><span class="dow">Thu</span> 20</span>
+              <span class="span">7:00a &ndash; 12:34p</span>
+              <span class="hrs">5.6</span>
+            </div>
+            <div class="day">
+              <span class="date"><span class="dow">Wed</span> 19</span>
+              <span class="span">7:00a &ndash; 3:48p</span>
+              <span class="hrs">8.8</span>
+            </div>
+            <div class="day long">
+              <span class="date"><span class="dow">Tue</span> 18</span>
+              <span class="span">7:00a &ndash; 5:55p</span>
+              <span class="hrs">10.9</span>
+            </div>
+            <div class="day">
+              <span class="date"><span class="dow">Mon</span> 17</span>
+              <span class="span">7:00a &ndash; 1:20p</span>
+              <span class="hrs">6.3</span>
+            </div>
+            <div class="day off">
+              <span class="date"><span class="dow">Sun</span> 16</span>
+              <span class="span">No site time</span>
+              <span class="hrs">&mdash;</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 2 ============ -->
+    <section class="screen">
+      <div class="caption">
+        <span class="num">Screen 02</span>
+        <h2>Tonight&rsquo;s one tap</h2>
+        <p>It asks once, in the evening, and only when the day is worth asking about. Tapping Confirm is what turns a guess into a record you personally signed off on — which is the difference three weeks later when you&rsquo;re standing in the office.</p>
+      </div>
+
+      <div class="phone">
+        <div class="statusbar"><span>6:38</span><span>Hour Log</span></div>
+        <div class="app">
+          <div class="confirm">
+
+            <div class="askwhy">
+              <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M128 24a104 104 0 1 0 104 104A104.11 104.11 0 0 0 128 24Zm0 192a88 88 0 1 1 88-88 88.1 88.1 0 0 1-88 88Zm8-104v56a8 8 0 0 1-16 0v-48h-8a8 8 0 0 1 0-16h16a8 8 0 0 1 8 8Zm-20-36a12 12 0 1 1 12 12 12 12 0 0 1-12-12Z"/></svg>
+              <span>Ran past 9 hours</span>
+            </div>
+
+            <div class="dateline">Wednesday, August 26</div>
+
+            <div class="hero">
+              <div class="figure">10.2</div>
+              <div class="figlabel">hours on site</div>
+            </div>
+
+            <div class="rangebox">
+              <div class="rangerow">
+                <span class="k">Started</span>
+                <span class="v">7:00 AM<span class="src">scheduled &middot; on site 6:47a</span></span>
+              </div>
+              <div class="rangerow">
+                <span class="k">Left</span>
+                <span class="v">5:12 PM<span class="src">detected</span></span>
+              </div>
+            </div>
+
+            <div class="actions">
+              <div class="btn btn-primary">
+                <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69 218.34 66.34a8 8 0 0 1 11.32 11.32Z"/></svg>
+                <span>Confirm 10.2 hrs</span>
+              </div>
+              <div class="btn btn-quiet">That&rsquo;s not right</div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SCREEN 3 ============ -->
+    <section class="screen">
+      <div class="caption">
+        <span class="num">Screen 03</span>
+        <h2>Fixing it</h2>
+        <p>Correcting a day almost never means &ldquo;let me scroll a time picker.&rdquo; It means the app caught you at the gas station instead of the site. So it offers the times it actually observed first, and keeps the picker as the fallback.</p>
+      </div>
+
+      <div class="phone">
+        <div class="statusbar"><span>6:39</span><span>Hour Log</span></div>
+        <div class="app">
+          <div class="adjust">
+
+            <div class="adjusthead">
+              <h3>When did you leave?</h3>
+              <p>Wednesday, August 26 &middot; here&rsquo;s what your phone saw.</p>
+            </div>
+
+            <div class="choice sel">
+              <span class="time">5:12 PM</span>
+              <span class="why"><strong>Left the site</strong>Crossed out of the work zone</span>
+              <span class="mark">
+                <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69 218.34 66.34a8 8 0 0 1 11.32 11.32Z"/></svg>
+              </span>
+            </div>
+
+            <div class="choice">
+              <span class="time">4:58 PM</span>
+              <span class="why"><strong>Last time you moved</strong>Still inside the work zone</span>
+            </div>
+
+            <div class="choice">
+              <span class="time">5:30 PM</span>
+              <span class="why"><strong>Your usual Wednesday</strong>Average of the last 6</span>
+            </div>
+
+            <div class="choice">
+              <span class="time" style="color: var(--muted);">Other</span>
+              <span class="why"><strong>Set it yourself</strong>Pick any time</span>
+            </div>
+
+            <div class="startnote">
+              <span class="k">Start time</span>
+              <span class="v">7:00 AM<span class="src">scheduled &middot; on site 6:47a</span></span>
+            </div>
+
+            <div class="adjustfoot">
+              <div class="recalc">
+                <span class="k">That makes it</span>
+                <span class="v">10.2 hrs</span>
+              </div>
+              <div class="btn btn-primary">
+                <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M229.66 77.66l-128 128a8 8 0 0 1-11.32 0l-56-56a8 8 0 0 1 11.32-11.32L96 188.69 218.34 66.34a8 8 0 0 1 11.32 11.32Z"/></svg>
+                <span>Save the day</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <div class="notes">
+    <div class="note">
+      <h4>Why orange only appears twice</h4>
+      <p>Hi-vis orange marks days past nine hours, and the one button that commits a record. Nothing else earns it. If you see orange, money was on the line — that&rsquo;s the whole legend, and you never have to learn it.</p>
+    </div>
+    <div class="note">
+      <h4>Why the numbers are monospaced</h4>
+      <p>Every hour figure and timestamp is set in mono with tabular figures, so a column of fourteen days lines up on the decimal. Spotting the odd day becomes a glance rather than a read. Mono also quietly says &ldquo;this is a recording, not an opinion.&rdquo;</p>
+    </div>
+    <div class="note">
+      <h4>Why there are no cards</h4>
+      <p>A log book is ruled lines. Fourteen floating cards with shadows would break the one thing the period screen is for — running your eye down a single column of hours without interruption.</p>
+    </div>
+    <div class="note">
+      <h4>Every time says where it came from</h4>
+      <p>&ldquo;Scheduled,&rdquo; &ldquo;detected,&rdquo; &ldquo;on site.&rdquo; A number the app guessed and a number you confirmed are not the same kind of fact, and it should never blur them — least of all the one you might have to defend.</p>
+    </div>
+    <div class="note">
+      <h4>Arriving and starting are two clocks</h4>
+      <p>Your phone sees you at 6:47; you&rsquo;re paid from 7:00. The hours are built from the scheduled start, never from arrival — otherwise every day inflates a little. Arrival is kept underneath as backup, and earns its keep as a tripwire: show up at 4:52 for an early call-in and the app knows this isn&rsquo;t a normal day, so it asks instead of assuming.</p>
+    </div>
+    <div class="note">
+      <h4>No lunch anywhere</h4>
+      <p>You work through and get paid through, so there is no break to subtract and no timer to start. One fewer thing on screen, and one fewer thing to get wrong.</p>
+    </div>
+  </div>
+
+</div>
