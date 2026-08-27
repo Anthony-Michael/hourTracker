@@ -83,7 +83,9 @@ MAX_SITE_RADIUS_M = 800.0
 
 EARTH_RADIUS_M = 6371000.0
 
-GPX_NS = {"gpx": "http://www.topografix.com/GPX/1/1"}
+def _local(tag):
+    """Strip any XML namespace: '{http://...}trkpt' -> 'trkpt'."""
+    return tag.rsplit("}", 1)[-1]
 
 
 # --- Geometry ---------------------------------------------------------------
@@ -102,23 +104,22 @@ def haversine(lat1, lon1, lat2, lon2):
 def parse_gpx(path):
     """Return [(datetime, lat, lon), ...] sorted by time.
 
-    Handles both namespaced GPX 1.1 and the un-namespaced files some loggers
-    emit, because it is not worth losing a day of fieldwork to an XML detail.
+    Namespace-agnostic on purpose. GPX 1.0 and 1.1 use different namespace URIs
+    (.../GPX/1/0 and .../GPX/1/1), and loggers differ on which they emit -- the
+    one being used for field test 01 defaults to 1.0. Matching a fixed namespace
+    silently finds zero points and reports an empty file, which is a miserable
+    way to lose a day of fieldwork to an XML detail. Match on the local tag name
+    and accept whatever the logger produced.
     """
-    tree = ET.parse(path)
-    root = tree.getroot()
+    root = ET.parse(path).getroot()
 
-    points = root.findall(".//gpx:trkpt", GPX_NS)
-    if not points:
-        points = root.findall(".//trkpt")
+    points = [el for el in root.iter() if _local(el.tag) == "trkpt"]
     if not points:
         raise SystemExit(f"{path}: no <trkpt> elements found")
 
     out = []
     for pt in points:
-        time_el = pt.find("gpx:time", GPX_NS)
-        if time_el is None:
-            time_el = pt.find("time")
+        time_el = next((c for c in pt if _local(c.tag) == "time"), None)
         if time_el is None or not time_el.text:
             continue
         raw = time_el.text.strip().replace("Z", "+00:00")
