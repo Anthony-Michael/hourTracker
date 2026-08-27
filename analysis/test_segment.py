@@ -130,10 +130,36 @@ def started_recording_late():
     return pts, None, None
 
 
+def walks_off_site():
+    """Twice in the day he walks a few blocks to the porta potty and back.
+
+    This is the case that would sink a geofence: a 350 m excursion crosses any
+    plausible site boundary and reads as 'left the site' at ten in the morning.
+    Bracketing on commutes cannot see it -- walking is ~1.4 m/s, six times under
+    the driving threshold -- so the day stays whole."""
+    home = offset(SITE_LAT, SITE_LON, 12000, 18000)
+    lot = offset(SITE_LAT, SITE_LON, 0, -180)
+    potty = offset(SITE_LAT, SITE_LON, 310, -160)
+    pts = []
+    drive(pts, at("0621"), at("0649"), home, lot)
+    stand(pts, at("0649"), at("1002"), (SITE_LAT, SITE_LON), drift_m=90)
+    drive(pts, at("1002"), at("1006"), (SITE_LAT, SITE_LON), potty)     # walk out
+    stand(pts, at("1006"), at("1012"), potty, drift_m=0, jitter_m=8)
+    drive(pts, at("1012"), at("1016"), potty, (SITE_LAT, SITE_LON))     # walk back
+    stand(pts, at("1016"), at("1428"), (SITE_LAT, SITE_LON), drift_m=90)
+    drive(pts, at("1428"), at("1432"), (SITE_LAT, SITE_LON), potty)
+    stand(pts, at("1432"), at("1438"), potty, drift_m=0, jitter_m=8)
+    drive(pts, at("1438"), at("1442"), potty, (SITE_LAT, SITE_LON))
+    stand(pts, at("1442"), at("1707"), (SITE_LAT, SITE_LON), drift_m=90)
+    drive(pts, at("1707"), at("1739"), (SITE_LAT, SITE_LON), home)
+    return pts, "0649", "1707"
+
+
 SCENARIOS = [
     ("normal short day", normal_day, True),
     ("overtime day", overtime_day, True),
     ("truck repositioned mid-shift", truck_repositioned, True),
+    ("walks off site to the porta potty", walks_off_site, True),
     ("logger started late", started_recording_late, False),
 ]
 
